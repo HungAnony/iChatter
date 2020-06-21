@@ -15,37 +15,45 @@ import Firebase
 import CryptoKit
 
 protocol LoginView {
-    func onLoginSucceed(message : String);
-    func onLoginFailed(message : String);
-    func onShowSpinner();
+    func onLoginSucceed(message : String)
+    func onLoginFailed(message : String)
+    func onShowSpinner()
+    func onRemoveSpinner()
 }
 
 class LoginPresenter: NSObject{
     var loginView : LoginView?
     fileprivate var currentNonce: String?
-    // B extends A
-    // B implements C
-    // => C = A
+    
+    // class B extends class A
+    // class B implements protocol C
+    // => C = A(cast)
     
     init(view : LoginView) {
         loginView = view
     }
-    
     
 }
 
 //MARK: - Auth With Firebase
 extension LoginPresenter{
     func authWithFirebase(credential : AuthCredential){
-        Auth.auth().signIn(with: credential) { (authResult, error) in
+        loginView?.onShowSpinner()
+        Auth.auth().signIn(with: credential) { [unowned self] (authResult, error) in
+            self.loginView?.onRemoveSpinner()
             if error != nil {
                 print("Auth Fail")
                 print(error!)
                 return
             }
+            self.markLogined()
             print("Auth Succeed!")
             self.loginView?.onLoginSucceed(message: "Login Succeed!")
         }
+    }
+    
+    private func markLogined(){
+        UserDefaults.standard.set(true, forKey: "Login")
     }
 }
 
@@ -60,7 +68,7 @@ extension LoginPresenter{
     }
     
     func handleFacebookLogin(_ result : LoginManagerLoginResult?,_ error :Error?){
-        if error != nil{
+        if error != nil || result!.isCancelled{
             handleFacebookLoginFail(result, error)
             return
         }
@@ -76,12 +84,12 @@ extension LoginPresenter{
     
     func handleFacebookLoginFail(_ result : LoginManagerLoginResult?,_ error :Error?){
         if (error != nil) {
-            loginView?.onLoginFailed(message: "Process error")
+            loginView?.onLoginFailed(message: "Process FB error! ")
         }
         else if (result!.isCancelled) {
-            loginView?.onLoginFailed(message: "Cancelled")
+            loginView?.onLoginFailed(message: "User FB Cancelled !")
         } else {
-            loginView?.onLoginFailed(message: "Unknown Error")
+            loginView?.onLoginFailed(message: "Unknown FB Error")
         }
     }
     
@@ -91,10 +99,12 @@ extension LoginPresenter{
 //MARK: - Handle Google Login
 extension LoginPresenter : GIDSignInDelegate{
     func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error!) {
-        if let error = error {
-            handleLoginGoogleFail(error)
+        if let error = error{
+            handleLoginGoogleFail(error,user)
         }
-        handleLoginGoogleSucceed(user)
+        if let user = user{
+            handleLoginGoogleSucceed(user)
+        }
     }
     
     func requestGoogleLogin(){
@@ -111,16 +121,21 @@ extension LoginPresenter : GIDSignInDelegate{
         authWithFirebase(credential: credential)
     }
     
-    func handleLoginGoogleFail(_ error : Error!){
+    func handleLoginGoogleFail(_ error : Error!, _ user : GIDGoogleUser!){
         if (error as NSError).code == GIDSignInErrorCode.hasNoAuthInKeychain.rawValue {
             loginView?.onLoginFailed(message: "The user has not signed in before or they have since signed out.")
-        } else {
+        }
+        else if(user == nil){
+            loginView?.onLoginFailed(message: "User GG cancelled !")
+        }
+        else {
             loginView?.onLoginFailed(message: "\(error.localizedDescription)")
         }
         return
     }
 }
 
+//MARK: - Handle Apple Login
 extension LoginPresenter:  ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding{
     func requestAppleLogin(){
         let nonce = randomNonceString()

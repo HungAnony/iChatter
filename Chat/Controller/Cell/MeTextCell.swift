@@ -10,5 +10,9 @@ import Foundation
 import UIKit
 
 class MeTextCell: UITableViewCell {
+    @IBOutlet weak var lblTextSent: UILabel!
+    func bindData(_ data : String){
+        lblTextSent.text = data
+    }
     
 }
