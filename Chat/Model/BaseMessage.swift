@@ -9,11 +9,12 @@
 import Foundation
 
 
-class BaseMessage{
+class BaseMessage{ 
     var sender : String!
-    var timestamp : String!
-    var cellIdentifier : String!
+    var timestamp : Double!
     var documentId : String!
-    var isHiddenAvatar : String!
-    var indexMessage : String!
+    var isHiddenAvatar : Bool!
+    var cellIdentifier : String!
+    var indexMessage : Int!
+    var type = MessageType.DEFAULT
 }

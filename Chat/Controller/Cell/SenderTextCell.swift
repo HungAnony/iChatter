@@ -9,15 +9,16 @@
 import Foundation
 import UIKit
 
-class SenderTextCell: UITableViewCell {
+class SenderTextCell: BaseMessageViewCell {
     @IBOutlet weak var lblTextMessage: UILabel!
     @IBOutlet weak var imgAvatar: UIImageView!
     @IBOutlet weak var lblNickname: UILabel!
     
-    func bindData(_ chatModel : ChatModel){
-        lblTextMessage.text = chatModel.textSent
-        imgAvatar.image = UIImage(named: chatModel.imageAvatar!)
-        lblNickname.text = chatModel.nickName
+    override func bindData(_ message : BaseMessage){
+        let textMessage = message as! TextMessage
+        lblTextMessage.text = textMessage.content
+        
+            
     }
     
     

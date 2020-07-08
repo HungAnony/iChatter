@@ -9,10 +9,15 @@
 import Foundation
 import UIKit
 
-class MeTextCell: UITableViewCell {
-    @IBOutlet weak var lblTextSent: UILabel!
-    func bindData(_ data : String){
-        lblTextSent.text = data
+class MeTextCell: BaseMessageViewCell {
+    @IBOutlet weak var lblContent: UILabel!
+    @IBOutlet weak var lblTimestamp: UILabel!
+    
+    override func bindData(_ message : BaseMessage){
+        let textMessage = message as! TextMessage
+        lblContent.text = textMessage.content
+        lblTimestamp.text = String.formatTime(time: textMessage.timestamp)
     }
+    
     
 }

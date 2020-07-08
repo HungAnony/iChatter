@@ -8,6 +8,8 @@ target 'Chat' do
   # Pods for Chat
 
 	pod 'Firebase/Firestore'
+	pod 'Firebase/Core'
+	pod 'Firebase/Storage'
   	pod 'Firebase/Auth'
 	pod 'MIBlurPopup', '~> 0.2.0'
 	pod 'Alamofire', '~> 5.0'
@@ -22,4 +24,7 @@ pod 'FBSDKLoginKit'
 pod 'FBSDKCoreKit'
 pod 'SQLite.swift', '~> 0.12.2'
 pod 'GoogleSignIn'
+pod 'SideMenu'
+pod 'SDWebImage'
+
 end

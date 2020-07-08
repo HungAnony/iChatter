@@ -8,6 +8,17 @@
 
 import Foundation
 import UIKit
-class SenderImageCell: UITableViewCell {
+import SDWebImage
+
+class SenderImageCell: BaseMessageViewCell {
+    @IBOutlet weak var imgAvatar: UIImageView!
+    @IBOutlet weak var lblNickname: UILabel!
+    @IBOutlet weak var imgMessage: UIImageView!
     
+    override func bindData(_ message: BaseMessage) {
+        let imageMessage = message as! ImageMessage
+        imgMessage.sd_setImage(with: imageMessage.urlImage)
+    }
 }
+
+

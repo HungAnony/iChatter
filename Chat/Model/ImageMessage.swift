@@ -7,7 +7,8 @@
 //
 
 import Foundation
+import UIKit
 
 class ImageMessage: BaseMessage{
-    var urlImage : String!
+    var urlImage : URL!
 }

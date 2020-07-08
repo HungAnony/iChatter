@@ -30,6 +30,7 @@ class RegisterAccountController: BaseViewController{
         self.navigationController?.navigationBar.isHidden = false
     }
     
+    
     @IBAction func onRegisterPressed(_ sender: Any) {
         checkUserRegister()
     }

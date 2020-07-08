@@ -53,7 +53,7 @@ extension LoginPresenter{
     }
     
     private func markLogined(){
-        UserDefaults.standard.set(true, forKey: "Login")
+        UserDefaults.standard.set(true, forKey: "Login2")
     }
 }
 
@@ -177,6 +177,7 @@ extension LoginPresenter:  ASAuthorizationControllerDelegate, ASAuthorizationCon
         let vc = loginView as! UIViewController
         return vc.view.window!
     }
+    
     
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
