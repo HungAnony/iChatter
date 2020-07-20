@@ -57,36 +57,50 @@ class ChatPresenter: NSObject {
         })
     }
     
+    
     //MARK: - Send Image Messages
     
-    func sendImageMessage(_ images : [UIImage], _ times : Int){
+    func sendImageMessage(_ images : [UIImage]){
         if(images.count == 0){
             return
         }
-        for _ in 1...times{
-            let imageMessage = ImageMessage()
-            imageMessage.isHiddenAvatar = true
-            imageMessage.cellIdentifier = "MeImageCell"
-            imageMessage.sender = me
-            imageMessage.timestamp = getCurrentTimestamp()
-            imageMessage.type = MessageType.IMAGE
-            
-            FirestoreHelper(firestore).uploadFileToStorage(imageMessage,images)
-            FirestoreHelper(firestore).saveMessageToDatabase(
-                message: imageMessage,
-                completion: {
-                    _ in
-                    self.view.onMessageSent(message: imageMessage)
-            },
-                fail:{
-                    _ in
-                    self.view.onError(message: "Send Text Message Error!")
-            })
+        let chatImage = ChatImage()
+        let imageMessage = ImageMessage()
+        
+        imageMessage.isHiddenAvatar = true
+        imageMessage.cellIdentifier = "MeImageCell"
+        imageMessage.sender = me
+        imageMessage.timestamp = getCurrentTimestamp()
+        imageMessage.type = MessageType.IMAGE
+        for image in images{
+            chatImage.uuidImage = NSUUID.init().uuidString
+            chatImage.localImage = image
+            imageMessage.chatImages.append(chatImage)
         }
+        
+        FirestoreHelper(firestore).uploadFileToStorage(
+        message: imageMessage,
+        completion : { [unowned self] (imageMessage) in
+            self.handleAfterUploaded(imageMessage)
+        })
+    }
+
+    func handleAfterUploaded(_ message : BaseMessage){
+        FirestoreHelper(firestore).saveMessageToDatabase(
+            message: message,
+            completion: {
+                _ in
+                self.view.onMessageSent(message: message)
+        },
+            fail:{
+                _ in
+                self.view.onError(message: "Send Text Message Error!")
+        })
     }
     
-    //MARK: - Receive Messages
     
+    
+    //MARK: - Receive Messages
     func loadOldMessages(){
         firestore.collection("messages").getDocuments { [unowned self] (query, error) in
             if error != nil {
@@ -174,6 +188,8 @@ class ChatPresenter: NSObject {
     
     private func parseImageMessage(_ data : NSDictionary) -> BaseMessage{
         let imageMessage = ImageMessage()
+        let stringURL = data["url"] as! String
+        imageMessage.urlImage = URL(string: stringURL)
         imageMessage.cellIdentifier = "SenderImageCell"
         return imageMessage
     }

@@ -18,3 +18,11 @@ class BaseMessage{
     var indexMessage : Int!
     var type = MessageType.DEFAULT
 }
+
+
+
+
+
+
+
+

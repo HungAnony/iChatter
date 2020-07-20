@@ -13,9 +13,8 @@ import SDWebImage
 
 class FirestoreHelper{
     private var firestoreHelper : Firestore!
-    private var url : URL?
-    private let group = DispatchGroup()
-    private let semaphore = DispatchSemaphore(value: 1)
+    private let lock = NSLock()
+    
     
     init(_ firestore : Firestore){
         self.firestoreHelper = firestore
@@ -37,19 +36,24 @@ class FirestoreHelper{
     }
     
     private func getData(_ message : BaseMessage) -> NSDictionary{
-        var propertyMess : Any?
+        var content : String?
+        var url : String?
         switch message.type {
         case "TEXT":
-            propertyMess = (message as! TextMessage).content
+            content = (message as! TextMessage).content
+            url = ""
             break
         case "IMAGE":
-            propertyMess = (message as! ImageMessage).urlImage
+            content = ""
+            url = (message as! ImageMessage).urlImage.absoluteString
             break
         default:
-            propertyMess = "UNDEFINED CONTENT MESSAGE"
+            content = "UNDEFINED"
+            url = "UNDEFINED"
         }
         let data = ["sender" : message.sender!,
-                    "message" : propertyMess!,
+                    "message" : content!,
+                    "url" : url!,
                     "timestamp" : message.timestamp!,
                     "type": message.type] as [String : Any]
         
@@ -57,28 +61,37 @@ class FirestoreHelper{
     }
     
     
-    func uploadFileToStorage(_ imageMessage : ImageMessage, _ images : [UIImage]){
-        let uuidImage = NSUUID.init().uuidString
-        let storageRef = Storage.storage().reference().child("Image messages").child("uuidImage : \(uuidImage)")
-        group.enter()
-        for image in images{
-            if let dataWillBeUploaded = image.jpegData(compressionQuality: 1) {
-                storageRef.putData(dataWillBeUploaded, metadata: nil, completion: { [unowned self]
+    func uploadFileToStorage(message : ImageMessage,
+                             completion : @escaping (_ message : BaseMessage)-> Void){
+        
+        for chatImage in message.chatImages{
+            let storageMetadata = StorageMetadata(dictionary: ["uuidImage":"\(chatImage.uuidImage!)"])
+            let storageRef = Storage.storage().reference().child("Image messages").child("uuidImage : \(chatImage.uuidImage!)")
+            
+            if let dataWillBeUploaded = chatImage.localImage.jpegData(compressionQuality: 1) {
+                storageRef.putData(dataWillBeUploaded, metadata: storageMetadata, completion: {
                     (metadata,error) in
+                    
                     if(error != nil){
                         print("Failed to uploaded images with error: \(error!)")
+                        self.handleUploadViaLock(message, completion, metadata!, storageRef, error)
                         return
                     }
-                    print("Upload images to Firebase Storage successfully!!")
-                    self.setURLImage(storageRef,imageMessage)
-                    self.group.leave()
+                    
+                    print("Upload images to Storage successfully!!")
+                    self.setURLImage(storageRef, message) { (message) in
+                        self.handleUploadViaLock(message, completion, metadata!, storageRef)
+                    }
+                    
                 })
             }
+            
         }
     }
     
-    private func setURLImage(_ storageRef : StorageReference,_ imageMessage : ImageMessage){
-        group.enter()
+    private func setURLImage(_ storageRef : StorageReference,
+                             _ imageMessage : ImageMessage,
+                             completion : @escaping (_ message : ImageMessage) -> Void){
         storageRef.downloadURL(completion: { (url, error) in
             if error != nil {
                 print("Failed to download url:", error!)
@@ -86,15 +99,44 @@ class FirestoreHelper{
             } else {
                 imageMessage.urlImage = url
                 print("url image: \(imageMessage.urlImage!)")
-                self.group.leave()
+                completion(imageMessage)
             }
         })
     }
     
-    func downloadImage(_ message : BaseMessage) -> UIImage{
-        let imageView = UIImageView()
-        imageView.sd_setImage(with: (message as! ImageMessage).urlImage)
-        return imageView.image!
+    private func handleUploadViaLock(_ message : ImageMessage,
+                                   _ completion : @escaping (_ message : BaseMessage) -> Void,
+                                   _ metadata: StorageMetadata,
+                                   _ storageRef : StorageReference,
+                                   _ error : Error? = nil){
+        lock.lock()
+        let uuidImage = metadata.dictionaryRepresentation()["name"] as! String
+        var uploaded = 0
+        for chatImage in message.chatImages {
+            if uuidImage.contains(chatImage.uuidImage){
+                if (error != nil) {
+                    chatImage.state = ChatImage.State.UPLOADFAILED
+                }
+                else {
+                    chatImage.state = ChatImage.State.UPLOADED
+                }
+            }
+            if (chatImage.state != ChatImage.State.NOT_UPLOADED) {
+                uploaded += 1
+            }
+        }
+        
+        if (uploaded == message.chatImages.count) {
+            lock.unlock()
+            completion(message)
+        }
+        else{
+            lock.unlock()
+        }
+        
     }
+    
+    
+    
     
 }

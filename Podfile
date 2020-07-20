@@ -26,5 +26,5 @@ pod 'SQLite.swift', '~> 0.12.2'
 pod 'GoogleSignIn'
 pod 'SideMenu'
 pod 'SDWebImage'
-
+pod 'NotificationBannerSwift'
 end

@@ -17,7 +17,7 @@ class SenderImageCell: BaseMessageViewCell {
     
     override func bindData(_ message: BaseMessage) {
         let imageMessage = message as! ImageMessage
-        imgMessage.sd_setImage(with: imageMessage.urlImage)
+        imgMessage.sd_setImage(with: imageMessage.urlImage, placeholderImage: UIImage(named: "placeholder"))
     }
 }
 

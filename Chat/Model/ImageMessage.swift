@@ -11,4 +11,5 @@ import UIKit
 
 class ImageMessage: BaseMessage{
     var urlImage : URL!
+    var chatImages = Array<ChatImage>()
 }

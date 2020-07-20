@@ -18,6 +18,6 @@ class MeImageCell: BaseMessageViewCell {
     override func bindData(_ message: BaseMessage) {
         let imageMessage = message as! ImageMessage
         lblTimestamp.text = String.formatTime(time: imageMessage.timestamp)
-        imgMessage.image = FirestoreHelper(firestore).downloadImage(message)
+        imgMessage.sd_setImage(with: imageMessage.urlImage, placeholderImage: UIImage(named: "placeholder"))
     }
 }

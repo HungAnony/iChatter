@@ -9,6 +9,10 @@
 import UIKit
 
 class PersonInfoViewCell: UITableViewCell {
-
-
+    @IBOutlet weak var imgAvatar: UIImageView!
+    
+    @IBOutlet weak var lblNickname: UILabel!
+    @IBOutlet weak var lblState: UILabel!
+    @IBOutlet weak var imgLightState: UIImageView!
+    
 }

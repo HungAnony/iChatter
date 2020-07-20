@@ -17,8 +17,6 @@ class SenderTextCell: BaseMessageViewCell {
     override func bindData(_ message : BaseMessage){
         let textMessage = message as! TextMessage
         lblTextMessage.text = textMessage.content
-        
-            
     }
     
     

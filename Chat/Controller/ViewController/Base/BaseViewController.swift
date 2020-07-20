@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import NotificationBannerSwift
 
 class BaseViewController: UIViewController {
 
@@ -18,6 +19,7 @@ class BaseViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         if let title = titleNav{
             self.title = title
         }
@@ -26,6 +28,36 @@ class BaseViewController: UIViewController {
         self.navigationController?.navigationBar.titleTextAttributes = [
             NSAttributedString.Key.foregroundColor : UIColor.white // Only for title
         ]
+    }
+    
+    func allowToShowBannerNotification() -> Bool{
+        return false
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if(allowToShowBannerNotification()){
+            registerRemotePushNotification()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        unRegisterRemotePushNotification()
+    }
+    
+    private func registerRemotePushNotification(){
+        NotificationCenter.default.addObserver(self, selector: #selector(onRemotePushNotificationReceived(_:)), name: NSNotification.Name.init(rawValue: Channel.REMOTE_PUSH), object: nil)
+    }
+    
+    
+    private func unRegisterRemotePushNotification(){
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.init(rawValue: Channel.REMOTE_PUSH), object:  nil)
+    }
+    
+    @objc private func onRemotePushNotificationReceived(_ notification : Notification){
+        let banner = NotificationBanner(title: "local", subtitle: "subtitle", style: .success)
+        banner.show(on : self)
     }
     
     func showSpinner(onView : UIView){
@@ -105,7 +137,7 @@ class BaseViewController: UIViewController {
         adjustingHeight(show: state, heightKeyboard : keyboardFrame.size.height,heightTabbar : heightTabbar, animationDurarion: animationDurarion)
     }
     
-    public func adjustingHeight(show: Bool, heightKeyboard :CGFloat ,heightTabbar : CGFloat, animationDurarion: TimeInterval){
+    @objc func adjustingHeight(show: Bool, heightKeyboard :CGFloat ,heightTabbar : CGFloat, animationDurarion: TimeInterval){
         
     }
     
